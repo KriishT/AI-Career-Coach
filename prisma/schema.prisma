@@ -26,7 +26,7 @@ model User {
   updatedAt         DateTime  @updatedAt
   bio               String?
   experience        Int?     // Y.O.E
-  skills            String[] //Arrray of Skills
+  skills            String[] //Array of Skills
   assessments       Assessment[]
   resume            Resume[]
   coverLetter       CoverLetter[]
