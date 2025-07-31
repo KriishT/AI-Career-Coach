@@ -5,15 +5,25 @@ import { getUserOnboardingStatus } from "@/actions/user";
 import { redirect } from "next/navigation";
 
 const Page = async () => {
-  const { isOnboarded } = await getUserOnboardingStatus();
-  if (isOnboarded) {
-    redirect("/dashboard");
+  try {
+    const { isOnboarded } = await getUserOnboardingStatus();
+    if (isOnboarded) {
+      redirect("/dashboard");
+    }
+    return (
+      <main>
+        <OnboardingForm industries={industries} />
+      </main>
+    );
+  } catch (error) {
+    console.error("Error in onboarding page:", error);
+    // Fallback to showing the onboarding form even if there's an error
+    return (
+      <main>
+        <OnboardingForm industries={industries} />
+      </main>
+    );
   }
-  return (
-    <main>
-      <OnboardingForm industries={industries} />
-    </main>
-  );
 };
 
 export default Page;

@@ -48,7 +48,13 @@ export async function getIndustryInsights() {
     throw new Error("User not found");
   }
 
+  // If user doesn't have an industry set, they need to complete onboarding first
   if (!user.industry) {
+    throw new Error("User needs to complete onboarding first");
+  }
+
+  // If user has industry but no insight exists, generate one
+  if (!user.industryInsight) {
     const insights = await generateAIInsights(user.industry);
 
     const industryInsight = await db.industryInsight.create({

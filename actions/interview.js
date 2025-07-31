@@ -22,6 +22,10 @@ export async function generateQuiz() {
     throw new Error("User not found");
   }
 
+  if (!user.industry) {
+    throw new Error("Please complete your onboarding to set your industry before using interview features");
+  }
+
   const prompt = `
     Generate 10 technical interview questions for a ${
       user.industry
@@ -88,7 +92,7 @@ export async function saveQuizResult(questions, answers, score) {
       .join("\n\n");
 
     const improvementPrompt = `
-      The user got the following ${user.industry} technical interview questions wrong:
+      The user got the following ${user.industry || 'technical'} interview questions wrong:
 
       ${wrongQuestionsText}
 

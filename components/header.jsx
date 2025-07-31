@@ -18,9 +18,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { checkUser } from "@/lib/checkUser";
+import { getUserOnboardingStatus } from "@/actions/user";
 
 export default async function Header() {
   await checkUser();
+  const { isOnboarded } = await getUserOnboardingStatus();
 
   return (
     <header className="fixed top-0 w-full border-b bg-background/80 backdrop-blur-md z-50 supports-[backdrop-filter]:bg-background/60">
@@ -38,13 +40,13 @@ export default async function Header() {
         {/* Action Buttons */}
         <div className="flex items-center space-x-2 md:space-x-4">
           <SignedIn>
-            <Link href="/dashboard">
+            <Link href={isOnboarded ? "/dashboard" : "/onboarding"}>
               <Button
                 variant="outline"
                 className="hidden md:inline-flex items-center gap-2"
               >
                 <LayoutDashboard className="h-4 w-4" />
-                Industry Insights
+                {isOnboarded ? "Industry Insights" : "Complete Onboarding"}
               </Button>
               <Button variant="ghost" className="md:hidden w-10 h-10 p-0">
                 <LayoutDashboard className="h-4 w-4" />

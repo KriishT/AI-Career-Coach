@@ -5,16 +5,25 @@ import React from "react";
 import DashboardView from "./_components/Dashboard-view";
 
 const dashboard = async () => {
-  const { isOnboarded } = await getUserOnboardingStatus();
-  const insights = await getIndustryInsights();
-  if (!isOnboarded) {
+  try {
+    const { isOnboarded } = await getUserOnboardingStatus();
+    
+    if (!isOnboarded) {
+      redirect("/onboarding");
+    }
+    
+    const insights = await getIndustryInsights();
+    
+    return (
+      <div className="container mx-auto">
+        <DashboardView insights={insights} />
+      </div>
+    );
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    // If there's an error (like user needs onboarding), redirect to onboarding
     redirect("/onboarding");
   }
-  return (
-    <div className="container mx-auto">
-      <DashboardView insights={insights} />
-    </div>
-  );
 };
 
 export default dashboard;

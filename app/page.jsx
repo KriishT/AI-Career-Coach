@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -20,8 +22,31 @@ import Image from "next/image";
 import { features } from "./data/features";
 import { faqs } from "./data/faqs";
 import { howItWorks } from "./data/howItWorks";
+import { useUser } from "@clerk/nextjs";
+import { getUserOnboardingStatus } from "@/actions/user";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
+  const { isSignedIn } = useUser();
+  const [isOnboarded, setIsOnboarded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (isSignedIn) {
+        try {
+          const status = await getUserOnboardingStatus();
+          setIsOnboarded(status.isOnboarded);
+        } catch (error) {
+          console.error("Error checking onboarding status:", error);
+          setIsOnboarded(false);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkOnboardingStatus();
+  }, [isSignedIn]);
   return (
     <>
       <div className="grid-background"></div>
@@ -145,13 +170,14 @@ export default function LandingPage() {
               Join thousands of professionals who are advancing their careers
               with AI-powered guidance.
             </p>
-            <Link href="/dashboard" passHref>
+            <Link href={isSignedIn && isOnboarded ? "/dashboard" : isSignedIn ? "/onboarding" : "/sign-up"} passHref>
               <Button
                 size="lg"
                 variant="secondary"
                 className="h-11 mt-5 animate-bounce"
+                disabled={isLoading}
               >
-                Start Your Journey Today <ArrowRight className="ml-2 h-4 w-4" />
+                {isLoading ? "Loading..." : isSignedIn && isOnboarded ? "Go to Dashboard" : isSignedIn ? "Complete Onboarding" : "Start Your Journey Today"} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>

@@ -17,6 +17,10 @@ export async function generateCoverLetter(data) {
 
   if (!user) throw new Error("User not found");
 
+  if (!user.industry) {
+    throw new Error("Please complete your onboarding to set your industry before generating cover letters");
+  }
+
   const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${
       data.companyName

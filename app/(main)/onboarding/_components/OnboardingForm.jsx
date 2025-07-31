@@ -36,6 +36,7 @@ const OnboardingForm = ({ industries }) => {
   const [selectedIndustry, setSelectedIndustry] = useState();
   const router = useRouter();
 
+  // we use the useFetch function and return the loading status, the updated data/ response and the function
   const {
     loading: updateLoading,
     fn: updateUserfn,
@@ -69,6 +70,7 @@ const OnboardingForm = ({ industries }) => {
       router.refresh();
     }
   }, [updateResult, updateLoading]);
+
   const watchIndustry = watch("industry");
   return (
     <div className="flex items-center justify-center bg-background">
@@ -183,9 +185,7 @@ const OnboardingForm = ({ industries }) => {
                 placeholder="Tell us about your professional background..."
                 {...register("bio")}
               ></Textarea>
-              <p className="text-sm text-muted-foreground">
-                Seperate multiple skills with commas
-              </p>
+
               {errors.bio && (
                 <p className="text-sm text-red-500">{errors.bio.message}</p>
               )}

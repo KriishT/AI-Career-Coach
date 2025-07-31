@@ -21,7 +21,10 @@ export async function updateUser(data) {
   try {
     //in this block either everything completes entirely or rolls back to failure
     const result = await db.$transaction(
+      //A transaction is an all-or-nothing wrapper around DB operations. if any step fails, all changes are rolled back.
       async (tx) => {
+        //Inside the callback you get a scoped Prisma client (tx) that points to the same session.
+
         let industryInsight = await tx.industryInsight.findUnique({
           where: {
             industry: data.industry,
@@ -56,46 +59,58 @@ export async function updateUser(data) {
         //if anything fails ,the transaction fails and gives us error
 
         return { updatedUser, industryInsight };
+        //what result returns
       },
       {
         timeout: 10000,
       },
     );
     return { success: true, ...result };
+    //basically { success: true, updatedUser, industryInsight}
   } catch (error) {
     throw new Error("Failed to update profile");
   }
 }
 
-export async function getUserOnboardingStatus(data) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
-  const user = await db.user.findUnique({
-    where: {
-      clerkUserId: userId,
-    },
-  });
-  if (!user) {
-    throw new Error("User does not exist");
-  }
-
+export async function getUserOnboardingStatus() {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { isOnboarded: false };
+    }
+
     const user = await db.user.findUnique({
       where: {
         clerkUserId: userId,
       },
       select: {
-        industry: true, // we repeat this step but this time we make sure to check populate the industry
+        industry: true,
       },
     });
+
+    if (!user) {
+      // User doesn't exist in database yet, create them
+      const clerkUser = await import("@clerk/nextjs/server").then(m => m.currentUser());
+      if (clerkUser) {
+        const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
+        await db.user.create({
+          data: {
+            clerkUserId: userId,
+            name: name || 'User',
+            imageUrl: clerkUser.imageUrl,
+            email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          },
+        });
+      }
+      return { isOnboarded: false };
+    }
+
     return {
       isOnboarded: !!user?.industry,
     };
   } catch (error) {
     console.error("Error checking onboarding status:", error);
-    throw new Error("Failed to check onboarding status");
+    // Return false instead of throwing error to prevent app crash
+    return { isOnboarded: false };
   }
 }

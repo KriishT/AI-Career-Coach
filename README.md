@@ -1,24 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AI Career Coach
+
+An AI-powered career coaching application built with Next.js, Clerk authentication, and Prisma ORM.
+
+## Features
+
+- 🔐 Secure authentication with Clerk
+- 📝 AI-powered resume builder
+- 💼 Cover letter generator
+- 🎯 Interview preparation with quizzes
+- 📊 Career insights and analytics
+- 🚀 Onboarding flow for new users
+
+## Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL database
+- Clerk account for authentication
+- Google AI API key (for insights generation)
+
+## Environment Setup
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```env
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/your_database_name"
+
+# Google AI (for generating insights)
+GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+
+# Inngest (for background jobs)
+INNGEST_EVENT_KEY=your_inngest_event_key_here
+INNGEST_SIGNING_KEY=your_inngest_signing_key_here
+```
+
+### Important Notes
+
+- **Clerk Configuration**: Make sure to use production keys from your Clerk dashboard, not development keys
+- **Database**: Ensure your PostgreSQL database is running and accessible
+- **Redirect URLs**: Configure your Clerk application with the correct redirect URLs:
+  - Sign-in redirect: `https://your-domain.com/dashboard`
+  - Sign-up redirect: `https://your-domain.com/onboarding`
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+```bash
+npm install
+```
 
+2. Set up the database:
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+3. Run the development server:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 

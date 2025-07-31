@@ -70,6 +70,10 @@ export async function improveWithAI({ current, type }) {
 
   if (!user) throw new Error("User not found");
 
+  if (!user.industry) {
+    throw new Error("Please complete your onboarding to set your industry before using AI features");
+  }
+
   const prompt = `
     As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
     Make it more impactful, quantifiable, and aligned with industry standards.
