@@ -4,33 +4,59 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
 export async function generateCoverLetter(data) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  try {
+    // Validate input data
+    if (!data || typeof data !== 'object') {
+      throw new Error("Invalid input data");
+    }
+    
+    if (!data.companyName || !data.jobTitle || !data.jobDescription) {
+      throw new Error("Missing required fields: companyName, jobTitle, and jobDescription are required");
+    }
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
 
-  if (!user) throw new Error("User not found");
+    // Validate GEMINI_API_KEY
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
+    }
 
-  if (!user.industry) {
-    throw new Error("Please complete your onboarding to set your industry before generating cover letters");
-  }
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const prompt = `
-    Write a professional cover letter for a ${data.jobTitle} position at ${
-      data.companyName
-    }.
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.industry) {
+      throw new Error("Please complete your onboarding to set your industry before generating cover letters");
+    }
+
+    // Safely handle optional fields
+    const skillsText = user.skills && user.skills.length > 0 
+      ? user.skills.join(", ") 
+      : "Not specified";
+    const experienceText = user.experience !== null && user.experience !== undefined 
+      ? `${user.experience} years` 
+      : "Not specified";
+    const bioText = user.bio || "Not provided";
+
+    const prompt = `
+    Write a professional cover letter for a ${data.jobTitle} position at ${data.companyName}.
     
     About the candidate:
     - Industry: ${user.industry}
-    - Years of Experience: ${user.experience}
-    - Skills: ${user.skills?.join(", ")}
-    - Professional Background: ${user.bio}
+    - Years of Experience: ${experienceText}
+    - Skills: ${skillsText}
+    - Professional Background: ${bioText}
     
     Job Description:
     ${data.jobDescription}
@@ -47,9 +73,12 @@ export async function generateCoverLetter(data) {
     Format the letter in markdown.
   `;
 
-  try {
     const result = await model.generateContent(prompt);
     const content = result.response.text().trim();
+
+    if (!content) {
+      throw new Error("Failed to generate cover letter content");
+    }
 
     const coverLetter = await db.coverLetter.create({
       data: {
@@ -64,8 +93,27 @@ export async function generateCoverLetter(data) {
 
     return coverLetter;
   } catch (error) {
-    console.error("Error generating cover letter:", error.message);
-    throw new Error("Failed to generate cover letter");
+    console.error("Error generating cover letter:", {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
+    
+    // Re-throw with a user-friendly message
+    const errorMessage = error?.message || "Failed to generate cover letter. Please try again.";
+    
+    // Ensure we throw a proper Error object that can be serialized
+    if (error instanceof Error) {
+      // Preserve specific error messages
+      if (error.message === "Unauthorized" || 
+          error.message === "User not found" ||
+          error.message === "GEMINI_API_KEY is not configured" ||
+          error.message.includes("onboarding")) {
+        throw error;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 
